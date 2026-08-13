@@ -10,7 +10,7 @@ def compute_zonolayer_bounds(latent_train, y_lower, y_upper, latent_test):
     y_u = np.asarray(y_upper, dtype=np.float64).ravel()
 
     X = np.hstack([X, np.ones((X.shape[0], 1))])
-    print(X.shape)
+    # print(X.shape)
     X_test = np.hstack([X_test, np.ones((X_test.shape[0], 1))])
 
     c_y = 0.5 * (y_u + y_l)
