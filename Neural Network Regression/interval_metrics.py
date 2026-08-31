@@ -51,37 +51,21 @@ def interval_metrics(pred_low, pred_up, true_low, true_up):
     return {"Dmin": Dmin, "Dmax": Dmax, "Dstar": Dstar, "MAEmid": MAEmid}
 
 
+def compute_picp(y_true_low, y_true_up, pred_low, pred_up):
+    covered = (pred_low.flatten() <= y_true_low.flatten()) & (
+        pred_up.flatten() >= y_true_up.flatten())
+    picp = np.mean(covered) * 100
+    return picp
+
+
 def compare_models(results_dict, decimals=2):
-    """
-    results_dict: {"Model Name": {"Dmin":.., "Dmax":.., "Dstar":.., "MAEmid":..}, ...}
-    Prints a Table-5-style comparison.
-    """
     df = pd.DataFrame(results_dict).T[["Dmin", "Dmax", "Dstar", "MAEmid"]]
     print(df.round(decimals))
     return df
 
 
-def benchmark_inference(
-    predict_fn,
-    X,
-    name="Model",
-    n_runs=20,
-    warmup=5,
-):
-    """
-    Benchmark end-to-end inference time and peak process memory.
-
-    Measures:
-        - Mean inference time
-        - Standard deviation
-        - Time per sample
-        - Peak RSS memory increase
-
-    Suitable for CPU-based PyTorch / NumPy models.
-    """
-
+def benchmark_inference(predict_fn, X, name="Model", n_runs=20, warmup=5):
     process = psutil.Process(os.getpid())
-
     gc.collect()
 
     for _ in range(warmup):
@@ -92,13 +76,9 @@ def benchmark_inference(
     times = []
 
     for _ in range(n_runs):
-
         start = time.perf_counter()
-
         _ = predict_fn(X)
-
         end = time.perf_counter()
-
         times.append(end - start)
 
     times = np.array(times)
@@ -106,52 +86,30 @@ def benchmark_inference(
     mean_time = times.mean()
     std_time = times.std()
 
-    time_per_sample_ms = (
-        mean_time / len(X) * 1000
-    )
-
+    time_per_sample_ms = (mean_time / len(X) * 1000)
     gc.collect()
 
     memory_samples = []
     stop_monitor = False
 
     def monitor_memory():
-
         while not stop_monitor:
-
-            memory_samples.append(
-                process.memory_info().rss
-            )
-
+            memory_samples.append(process.memory_info().rss)
             time.sleep(0.001)  # 1 ms sampling
 
-    # Memory immediately before inference
     memory_before = process.memory_info().rss
 
-    monitor_thread = threading.Thread(
-        target=monitor_memory
-    )
-
+    monitor_thread = threading.Thread(target=monitor_memory)
     monitor_thread.start()
 
-    # Run complete inference
     _ = predict_fn(X)
 
     stop_monitor = True
     monitor_thread.join()
-
     memory_after = process.memory_info().rss
-
-    # Include final measurement
     memory_samples.append(memory_after)
-
     peak_memory = max(memory_samples)
-
-    # Memory increase relative to baseline
-    peak_memory_mb = (
-        max(0, peak_memory - memory_before)
-        / (1024 ** 2)
-    )
+    peak_memory_mb = (max(0, peak_memory - memory_before) / (1024 ** 2))
 
     results = {
         "model": name,
@@ -165,19 +123,7 @@ def benchmark_inference(
     print(name)
     print("=" * 50)
 
-    print(
-        f"Inference time : "
-        f"{mean_time:.6f} ± {std_time:.6f} s"
-    )
-
-    print(
-        f"Per sample     : "
-        f"{time_per_sample_ms:.6f} ms"
-    )
-
-    print(
-        f"Peak memory    : "
-        f"{peak_memory_mb:.3f} MB"
-    )
-
+    print(f"Inference time: {mean_time:.6f} ± {std_time:.6f} s")
+    print(f"Per sample: {time_per_sample_ms:.6f} ms")
+    print(f"Peak memory: {peak_memory_mb:.3f} MB")
     return results
