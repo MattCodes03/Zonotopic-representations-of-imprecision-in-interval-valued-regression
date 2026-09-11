@@ -39,6 +39,7 @@ import PyIPM
 def fit_zonolayer(latent_train, y_lower, y_upper):
     X = np.atleast_2d(np.asarray(latent_train, dtype=np.float64))
     X = np.hstack([X, np.ones((X.shape[0], 1))])
+    print("X", X.shape)
 
     y_l = np.asarray(y_lower, dtype=np.float64).ravel()
     y_u = np.asarray(y_upper, dtype=np.float64).ravel()
