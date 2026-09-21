@@ -38,7 +38,7 @@ import PyIPM
 
 def fit_zonolayer(latent_train, y_lower, y_upper):
     X = np.atleast_2d(np.asarray(latent_train, dtype=np.float64))
-    X = np.hstack([X, np.ones((X.shape[0], 1))])
+    X = np.hstack([np.ones((X.shape[0], 1)), X])
     print("X", X.shape)
 
     y_l = np.asarray(y_lower, dtype=np.float64).ravel()
@@ -56,7 +56,7 @@ def fit_zonolayer(latent_train, y_lower, y_upper):
 
 def predict_zonolayer(fitted, latent_test):
     X_test = np.atleast_2d(np.asarray(latent_test, dtype=np.float64))
-    X_test = np.hstack([X_test, np.ones((X_test.shape[0], 1))])
+    X_test = np.hstack([np.ones((X_test.shape[0], 1)), X_test])
     # print("X_test Shape: ", X_test.shape)
 
     Beta, r_y, w_c = fitted["Beta"], fitted["r_y"], fitted["w_c"]

@@ -182,7 +182,7 @@ class SLINN:
         for i in range(2, self.L + 1):
             h = np.tanh(h @ self.weights[i] + self.biases[i])
 
-            # Midpoint prediction
+        # Midpoint prediction
         res_mid = h @ self.weights[self.L+1].mid + self.biases[self.L+1].mid
 
         # Interval prediction:
