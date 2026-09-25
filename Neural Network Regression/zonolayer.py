@@ -51,19 +51,20 @@ def fit_zonolayer(latent_train, y_lower, y_upper):
     Beta = np.linalg.solve(XtX, X.T)   # (d+1, n_train)
     w_c = Beta @ c_y                    # (d+1,)
 
+    # Z_y = Z(c_y, diag(r_y)); Z_beta = Z(w_c, Beta @ diag(r_y)) - represented implicitly
     return {"Beta": Beta, "r_y": r_y, "w_c": w_c}
 
 
-def predict_zonolayer(fitted, latent_test):
+def predict_zonolayer(zonolayer, latent_test):
     X_test = np.atleast_2d(np.asarray(latent_test, dtype=np.float64))
     X_test = np.hstack([np.ones((X_test.shape[0], 1)), X_test])
     # print("X_test Shape: ", X_test.shape)
 
-    Beta, r_y, w_c = fitted["Beta"], fitted["r_y"], fitted["w_c"]
+    Beta, r_y, w_c = zonolayer["Beta"], zonolayer["r_y"], zonolayer["w_c"]
 
     H = X_test @ Beta
-    c_test = X_test @ w_c
-    G_test = H * r_y
+    c_test = X_test @ w_c  # Predicted zonotope Z_y_hat Center
+    G_test = H * r_y  # Predicted zonotope Z_y_hat Generators
     radius = np.sum(np.abs(G_test), axis=1)
 
     return {
