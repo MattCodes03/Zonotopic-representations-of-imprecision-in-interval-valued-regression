@@ -39,7 +39,7 @@ class SadeghiINN(nn.Module):
         return torch.maximum(a.max(), b.max())
 
     def fit(self, loader, epochs=100, lr=1e-3, verbose=True):
-        opt = torch.optim.Adam(self.parameters(), lr=lr)
+        opt = torch.optim.Adam(self.parameters(), lr=lr, weight_decay=1e-4)
         for epoch in range(epochs):
             self.train()
             total = 0.0
