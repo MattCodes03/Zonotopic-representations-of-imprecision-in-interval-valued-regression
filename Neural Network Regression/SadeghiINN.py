@@ -33,7 +33,7 @@ class SadeghiINN(nn.Module):
         return y_hat, sigma_hat
 
     @staticmethod
-    def heteroscedastic_loss(y_lower, y_upper, y_hat, sigma_hat):
+    def loss(y_lower, y_upper, y_hat, sigma_hat):
         a = torch.abs(y_upper - y_hat) / sigma_hat
         b = torch.abs(y_lower - y_hat) / sigma_hat
         return torch.maximum(a.max(), b.max())
@@ -45,7 +45,7 @@ class SadeghiINN(nn.Module):
             total = 0.0
             for xb, y_lo, y_hi in loader:
                 y_hat, sigma_hat = self(xb)
-                loss = self.heteroscedastic_loss(y_lo, y_hi, y_hat, sigma_hat)
+                loss = self.loss(y_lo, y_hi, y_hat, sigma_hat)
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
@@ -62,8 +62,7 @@ class SadeghiINN(nn.Module):
         self.sigma_mean.copy_(sigma.mean())
         self.calibrated.fill_(True)
         sigma_hat = sigma / self.sigma_mean
-        self.h.copy_(self.heteroscedastic_loss(
-            y_lower, y_upper, y_hat, sigma_hat))
+        self.h.copy_(self.loss(y_lower, y_upper, y_hat, sigma_hat))
         return self
 
     @torch.no_grad()
