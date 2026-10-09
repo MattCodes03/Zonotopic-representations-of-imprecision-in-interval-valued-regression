@@ -4,14 +4,18 @@ import torch.nn.functional as F
 
 
 class SadeghiINN(nn.Module):
-    def __init__(self, input_dim=8, hidden_dim=8):
+    def __init__(self, input_dim=8, hidden_dims=(8,)):
         super().__init__()
-        self.feature_extractor = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim), nn.Tanh(),
-            nn.Linear(hidden_dim, hidden_dim), nn.Tanh(),
-        )
-        self.prediction_head = nn.Linear(hidden_dim, 1)
-        self.sigma_head = nn.Linear(hidden_dim, 1)
+        dims = [input_dim, *hidden_dims]
+
+        layers = []
+        for in_f, out_f in zip(dims[:-1], dims[1:]):
+            layers.append(nn.Linear(in_f, out_f))
+            layers.append(nn.Tanh())
+
+        self.feature_extractor = nn.Sequential(*layers)
+        self.prediction_head = nn.Linear(hidden_dims[-1], 1)
+        self.sigma_head = nn.Linear(hidden_dims[-1], 1)
 
         self.register_buffer("sigma_mean", torch.tensor(1.0))
         self.register_buffer("h", torch.tensor(1.0))
